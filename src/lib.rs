@@ -18,15 +18,15 @@ use std::io::prelude::*;
 fn create_dir_by_array(vec_value:&Vec<Value>,path: &Path){
     for v in vec_value.iter() {
         if let Value::String(path_name) = v {
-            let current_path = path.join(path_name);
+            let current_path = &path.join(path_name);
             if let Ok(_) = fs::create_dir(current_path) {
                 for v in vec_value.iter(){
                     match v {
                         Value::Array(vec) => {
-                            create_dir_by_array(vec,&current_path.clone())
+                            create_dir_by_array(vec, current_path.as_path())
                         },
                         Value::Object(map) => {
-                            create_md_by_object(map,&current_path.clone())
+                            create_md_by_object(map, current_path.as_path())
                         },
                         _ =>{},
                     }
@@ -46,7 +46,7 @@ fn create_md_by_object(object_value:&Map<String, Value>, path: &Path){
 }
 
 
-pub fn json_create_files(jsonstr: &str,file_path_str:&str){
+pub fn create_files_by_json(jsonstr: &str,file_path_str:&str){
     let path = Path::new(file_path_str);
     if let Ok(Value::Array(vec)) = serde_json::from_str(jsonstr) {
         create_dir_by_array(&vec, path);
@@ -54,8 +54,7 @@ pub fn json_create_files(jsonstr: &str,file_path_str:&str){
 }
 
 
-
-pub fn json_to_yaml(jsonstr: &str) -> Option<String>{
+fn json_to_yaml(jsonstr: &str) -> Option<String>{
     if let Ok(Value::Object(map)) = serde_json::from_str(jsonstr) {
          if let Ok(yaml) = serde_yaml::to_string(&map){
             return Some(yaml)
@@ -65,7 +64,7 @@ pub fn json_to_yaml(jsonstr: &str) -> Option<String>{
     return None
 }
 
-pub fn yaml_to_md(yamlstr: &str) -> Option<String>{
+fn yaml_to_md(yamlstr: &str) -> Option<String>{
     let mut result = String::new();
     if let Ok(Value::Object(map)) = serde_yaml::from_str(yamlstr) {
          let mut yaml_map = map;
@@ -112,6 +111,12 @@ fn echo_with_path(file_content:&str,path:&Path) -> io::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn test_create_files_by_json(){
+        let content = fs::read_to_string("test/create_files.json").unwrap();
+        create_files_by_json(&content,".");
+        //assert!(fs::try_exists(Path::new("")).is_ok())
+    }
 
     #[test]
     fn test_create_file(){
