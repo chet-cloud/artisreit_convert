@@ -4,6 +4,7 @@ use std::fs::{File};
 use std::io;
 use std::path::Path;
 use std::io::prelude::*;
+
 // https://github.com/dtolnay/serde-yaml
 // https://github.com/serde-rs/json
 // enum Value {
@@ -15,21 +16,30 @@ use std::io::prelude::*;
 //     Object(Map<String, Value>),
 // }
 
+pub fn create_files_by_json(jsonstr: &str,file_path_str:&str){
+    let path = Path::new(file_path_str);
+    if let Ok(Value::Array(vec)) = serde_json::from_str(jsonstr) {
+        create_dir_by_array(&vec, path);
+    }
+}
+
+
 fn create_dir_by_array(vec_value:&Vec<Value>,path: &Path){
     for v in vec_value.iter() {
         if let Value::String(path_name) = v {
             let current_path = &path.join(path_name);
-            if let Ok(_) = fs::create_dir(current_path) {
-                for v in vec_value.iter(){
-                    match v {
-                        Value::Array(vec) => {
-                            create_dir_by_array(vec, current_path.as_path())
-                        },
-                        Value::Object(map) => {
-                            create_md_by_object(map, current_path.as_path())
-                        },
-                        _ =>{},
-                    }
+            if let Err(s) = fs::create_dir(current_path.as_path()) {
+                println!("{}-{}",path_name,s.to_string())
+            }
+            for v in vec_value.iter(){
+                match v {
+                    Value::Array(vec) => {
+                        create_dir_by_array(vec, current_path.as_path())
+                    },
+                    Value::Object(map) => {
+                        create_md_by_object(map, current_path.as_path())
+                    },
+                    _ =>{},
                 }
             }
         }
@@ -40,16 +50,12 @@ fn create_md_by_object(object_value:&Map<String, Value>, path: &Path){
     if let Some(Value::String(file_name)) =  object_value.get("file_name") {
         if let Ok(file_content) = serde_json::to_string(&object_value){
             let current_path = path.join(file_name);
-            echo_with_path(&file_content,&current_path);
+            if let Some(file_content) = json_to_yaml(&file_content) {
+                if let Some(file_content) = yaml_to_md(&file_content){
+                    echo_with_path(&file_content,&current_path).expect("echo error");
+                }
+            }
         }
-    }
-}
-
-
-pub fn create_files_by_json(jsonstr: &str,file_path_str:&str){
-    let path = Path::new(file_path_str);
-    if let Ok(Value::Array(vec)) = serde_json::from_str(jsonstr) {
-        create_dir_by_array(&vec, path);
     }
 }
 
@@ -111,11 +117,67 @@ fn echo_with_path(file_content:&str,path:&Path) -> io::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn test_create_files_by_json(){
-        let content = fs::read_to_string("test/create_files.json").unwrap();
-        create_files_by_json(&content,".");
-        //assert!(fs::try_exists(Path::new("")).is_ok())
+
+        assert!(!Path::new("./test/a.md").exists());
+        assert!(!Path::new("./test/b.md").exists());
+        assert!(!Path::new("./test/subdir/a.md").exists());
+        assert!(!Path::new("./test/subdir/b.md").exists());
+        assert!(!Path::new("./test/subdir/subsubdir/a.md").exists());
+        assert!(!Path::new("./test/subdir/subsubdir/b.md").exists());
+        
+        let data = fs::read_to_string("test/files.json").unwrap();
+        create_files_by_json(&data,&".");
+
+        assert!(Path::new("./test/a.md").exists());
+        assert!(Path::new("./test/b.md").exists());
+        assert!(Path::new("./test/subdir/a.md").exists());
+        assert!(Path::new("./test/subdir/b.md").exists());
+        assert!(Path::new("./test/subdir/subsubdir/a.md").exists());
+        assert!(Path::new("./test/subdir/subsubdir/b.md").exists());
+
+        fs::remove_file("./test/a.md").unwrap();
+        fs::remove_file("./test/b.md").unwrap();
+        fs::remove_dir_all("./test/subdir").unwrap();
+
+    }
+
+    #[test]
+    fn test_create_file_by_json(){
+        let data = r#"
+        {
+            "file_name": "a.md",
+            "value":"cc"
+        }"#;
+        assert!(!Path::new("./test/a.md").exists());
+        if let Value::Object(map) = serde_json::from_str(data).unwrap() {
+            let path = Path::new("./test");
+            create_md_by_object(&map,path);
+        }
+        assert!(Path::new("./test/a.md").exists());
+        fs::remove_file("./test/a.md").unwrap();
+    }
+
+
+    #[test]
+    fn test_create_dir_by_json(){
+        let data = r#"
+        [
+            "test",
+            [
+                "subdir"
+            ]
+        ]"#;
+        assert!(!Path::new("./test/subdir").exists());
+        if let Value::Array(v) = serde_json::from_str(data).unwrap() {
+            let path = Path::new(".");
+            create_dir_by_array(&v,path);
+        }
+        assert!(Path::new("./test/subdir").exists());
+        fs::remove_dir_all("./test/subdir").unwrap();
+
     }
 
     #[test]
