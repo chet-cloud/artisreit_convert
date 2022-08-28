@@ -23,22 +23,21 @@ pub fn dir_mirror(from:&str,to:&str) -> Result<(),io::Error>{
             //println!("=>{}\t {}\t {}",path_str,from,to);
             if let Some(new_path_str) = update_path(path_str,from,to){
                 // println!("copy file: {}", new_path_str);
-                let destination = Path::new(&new_path_str);
-                if let Some(ex) = destination.clone().extension() {
-                    println!("copy file: {}", new_path_str);
-                    // if ex == "md" || ex == "json" || ex == "yaml" {
-                    //     if let Err(e) = fs::copy(from, destination) {
-                    //         return Err(e);
-                    //     }
-                    // }
+                if let Some(ex) = Path::new(&new_path_str).extension() {
+                    //println!("ex:\t{}", ex.to_str().unwrap());
+                    if ex == "md" || ex == "json" || ex == "yaml" {
+                        println!("copy_file:\t{} => {}",&path_str,&new_path_str);
+                        if let Err(e) = fs::copy(Path::new(&path_str), Path::new(&new_path_str)) {
+                            return Err(e);
+                        }
+                    }
                 }else{
-                    println!("create dir: {}", new_path_str);
-                    // if let Err(e) = fs::create_dir_all(destination){
-                    //     return Err(e);
-                    // }
+                    println!("create_dir:\t{}", &new_path_str);
+                    if let Err(e) = fs::create_dir_all(Path::new(&new_path_str)){
+                        return Err(e);
+                    }
                 }
             }
-
         }
     }
     Ok(())
@@ -67,6 +66,7 @@ mod tests {
     #[test]
     fn test_path_mirror_copy(){
         dir_mirror("test","test1");
+        fs::remove_dir_all("test1");
     }
 
     fn test_path(t:(&str,&str,&str,&str)){
@@ -116,6 +116,10 @@ mod tests {
                 println!("{}",path_str);
             }
         }
+
+        //fs::copy(Path::new("/home/bear/projects/artisreit_convert/test/test.yaml"), Path::new("/home/bear/projects/artisreit_convert/test1/test.yaml"));
+
+
     }
 
 }

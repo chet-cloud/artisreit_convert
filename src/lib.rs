@@ -91,7 +91,7 @@ fn yaml_to_md(yamlstr: &str) -> Option<String>{
 }
 
 // A simple implementation of `% cat path`
-fn cat(file_path_str: &str) -> io::Result<String> {
+pub fn cat(file_path_str: &str) -> io::Result<String> {
     let path = Path::new(file_path_str);
     let mut f = File::open(path)?;
     let mut s = String::new();
@@ -102,7 +102,7 @@ fn cat(file_path_str: &str) -> io::Result<String> {
 }
 
 // A simple implementation of `% echo s > path`
-fn echo(file_content:&str,file_path_str:&str) -> io::Result<()> {
+pub fn echo(file_content:&str,file_path_str:&str) -> io::Result<()> {
     let path = Path::new(file_path_str);
     let mut f = File::create(path)?;
     f.write_all(file_content.as_bytes())
