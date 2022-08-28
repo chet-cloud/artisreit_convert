@@ -26,13 +26,13 @@ pub fn dir_mirror(from:&str,to:&str) -> Result<(),io::Error>{
                 if let Some(ex) = Path::new(&new_path_str).extension() {
                     //println!("ex:\t{}", ex.to_str().unwrap());
                     if ex == "md" || ex == "json" || ex == "yaml" {
-                        println!("copy_file:\t{} => {}",&path_str,&new_path_str);
+                        println!("Copy_file:\t{} => {}",&path_str,&new_path_str);
                         if let Err(e) = fs::copy(Path::new(&path_str), Path::new(&new_path_str)) {
                             return Err(e);
                         }
                     }
                 }else{
-                    println!("create_dir:\t{}", &new_path_str);
+                    println!("Create_dir:\t{}", &new_path_str);
                     if let Err(e) = fs::create_dir_all(Path::new(&new_path_str)){
                         return Err(e);
                     }
@@ -61,7 +61,8 @@ fn update_path<'a>(sub_path:&'a str,from:&'a str,to:&'a str) ->  Option<String> 
 
 #[cfg(test)]
 mod tests {
-    use crate::cat;
+
+    use crate::generator::cat;
 
     use super::*;
 
