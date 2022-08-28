@@ -18,25 +18,27 @@ fn absolute_path(path: impl AsRef<Path>) -> Result<PathBuf, std::io::Error> {
 
 pub fn dir_mirror(from:&str,to:&str) -> Result<(),io::Error>{
     for e in WalkDir::new(from).into_iter() {
-        println!("++++");
         if let Ok(entry) = e {
             let path_str = entry.path().to_str().unwrap();
-            println!("===>{},{},{}", path_str,from,to);
+            //println!("=>{}\t {}\t {}",path_str,from,to);
             if let Some(new_path_str) = update_path(path_str,from,to){
-                println!("copy file: {}", new_path_str);
+                // println!("copy file: {}", new_path_str);
                 let destination = Path::new(&new_path_str);
-                if let Some(ex) = destination.extension(){
-                    if ex == "md" || ex == "json" || ex == "yaml" {
-                        if let Err(e) = fs::copy(from, destination) {
-                            return Err(e);
-                        }
-                    }
+                if let Some(ex) = destination.clone().extension() {
+                    println!("copy file: {}", new_path_str);
+                    // if ex == "md" || ex == "json" || ex == "yaml" {
+                    //     if let Err(e) = fs::copy(from, destination) {
+                    //         return Err(e);
+                    //     }
+                    // }
                 }else{
-                    if let Err(e) = fs::create_dir_all(destination){
-                        return Err(e);
-                    }
+                    println!("create dir: {}", new_path_str);
+                    // if let Err(e) = fs::create_dir_all(destination){
+                    //     return Err(e);
+                    // }
                 }
             }
+
         }
     }
     Ok(())
@@ -106,6 +108,14 @@ mod tests {
         assert_eq!("rs", Path::new("foo.rs").extension().unwrap());
         assert_eq!("gz", Path::new("foo.tar.gz").extension().unwrap());
         assert_eq!(None, Path::new("foo").extension());
+
+
+        for e in WalkDir::new("test").into_iter() {
+            if let Ok(entry) = e {
+                let path_str = entry.path().to_str().unwrap();
+                println!("{}",path_str);
+            }
+        }
     }
 
 }
