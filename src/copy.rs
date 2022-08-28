@@ -61,12 +61,19 @@ fn update_path<'a>(sub_path:&'a str,from:&'a str,to:&'a str) ->  Option<String> 
 
 #[cfg(test)]
 mod tests {
+    use crate::cat;
+
     use super::*;
 
     #[test]
     fn test_path_mirror_copy(){
-        dir_mirror("test","test1");
-        fs::remove_dir_all("test1");
+        dir_mirror("test","test1").unwrap();
+        assert!(Path::new("./test1").is_dir());
+        assert!(cat("./test/files.json").unwrap() == cat("./test1/files.json").unwrap());
+        assert!(cat("./test/test.json").unwrap() == cat("./test1/test.json").unwrap());
+        assert!(cat("./test/test.md").unwrap() == cat("./test1/test.md").unwrap());
+        assert!(cat("./test/test.yaml").unwrap() == cat("./test1/test.yaml").unwrap());
+        fs::remove_dir_all("test1").unwrap();
     }
 
     fn test_path(t:(&str,&str,&str,&str)){
