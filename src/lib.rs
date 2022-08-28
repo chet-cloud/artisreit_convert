@@ -5,6 +5,7 @@ use std::io;
 use std::path::Path;
 use std::io::prelude::*;
 
+mod copy;
 // https://github.com/dtolnay/serde-yaml
 // https://github.com/serde-rs/json
 // enum Value {
@@ -127,7 +128,7 @@ mod tests {
         assert!(!Path::new("./test/subdir/b.md").exists());
         assert!(!Path::new("./test/subdir/subsubdir/a.md").exists());
         assert!(!Path::new("./test/subdir/subsubdir/b.md").exists());
-        
+
         let data = fs::read_to_string("test/files.json").unwrap();
         create_files_by_json(&data,&".");
 
