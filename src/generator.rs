@@ -50,8 +50,10 @@ fn create_md_by_object(object_value: &Map<String, Value>, path: &Path) {
         if let Ok(file_content) = serde_json::to_string(&object_value) {
             let current_path = path.join(file_name);
             if let Some(file_content) = json_to_toml(&file_content) {
-                if let Some(file_content) = yaml_to_md(&file_content) {
+                // println!("-->toml_file_content\t{}", &file_content);
+                if let Some(file_content) = toml_to_md(&file_content) {
                     println!("Generate_file\t{}", current_path.to_str().unwrap());
+                    // println!("md_file_content\t{}<---", &file_content);
                     echo_with_path(&file_content, &current_path).expect("echo error");
                 }
             }
@@ -82,6 +84,25 @@ fn json_to_toml(jsonstr: &str) -> Option<String> {
 fn yaml_to_md(yamlstr: &str) -> Option<String> {
     let mut result = String::new();
     if let Ok(Value::Object(map)) = serde_yaml::from_str(yamlstr) {
+        let mut yaml_map = map;
+        if let Some(Value::String(con)) = yaml_map.get("content") {
+            result.push_str(con);
+            yaml_map.remove("content");
+        }
+        result.insert_str(0, "+++\n");
+        if let Ok(yaml) = serde_yaml::to_string(&yaml_map) {
+            result.insert_str(0, &yaml);
+        }
+    } else {
+        result.insert_str(0, "+++\n");
+    }
+    result.insert_str(0, "+++\n");
+    return Some(result);
+}
+
+fn toml_to_md(yamlstr: &str) -> Option<String> {
+    let mut result = String::new();
+    if let Ok(Value::Object(map)) = toml::from_str(yamlstr) {
         let mut yaml_map = map;
         if let Some(Value::String(con)) = yaml_map.get("content") {
             result.push_str(con);
