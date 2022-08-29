@@ -1,0 +1,13 @@
+global_integer = 5
+global_string = "test"
+
+[[peers]]
+ip = "127.0.0.1"
+port = 8080
+
+[[peers]]
+ip = "127.0.0.1"
+
+[server]
+ip = "127.0.0.1"
+port = 80

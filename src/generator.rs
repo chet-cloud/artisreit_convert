@@ -49,7 +49,7 @@ fn create_md_by_object(object_value: &Map<String, Value>, path: &Path) {
     if let Some(Value::String(file_name)) = object_value.get("file_name") {
         if let Ok(file_content) = serde_json::to_string(&object_value) {
             let current_path = path.join(file_name);
-            if let Some(file_content) = json_to_yaml(&file_content) {
+            if let Some(file_content) = json_to_toml(&file_content) {
                 if let Some(file_content) = yaml_to_md(&file_content) {
                     println!("Generate_file\t{}", current_path.to_str().unwrap());
                     echo_with_path(&file_content, &current_path).expect("echo error");
@@ -66,6 +66,16 @@ fn json_to_yaml(jsonstr: &str) -> Option<String> {
         }
     }
     eprint!("There are problem to parse the json string and convert to yaml string");
+    return None;
+}
+
+fn json_to_toml(jsonstr: &str) -> Option<String> {
+    if let Ok(Value::Object(map)) = serde_json::from_str(jsonstr) {
+        if let Ok(toml) = toml::to_string(&map) {
+            return Some(toml);
+        }
+    }
+    eprint!("There are problem to parse the json string and convert to toml string");
     return None;
 }
 
@@ -195,5 +205,13 @@ mod tests {
         let result = json_to_yaml(&content).unwrap();
         let content = fs::read_to_string("test/test.yaml").unwrap();
         assert_eq!(content, result)
+    }
+
+    #[test]
+    fn test_json_to_toml() {
+        let json = fs::read_to_string("test/test.toml.json").unwrap();
+        let result = json_to_toml(&json).unwrap();
+        let json = fs::read_to_string("test/test.toml").unwrap();
+        assert_eq!(json, result)
     }
 }
