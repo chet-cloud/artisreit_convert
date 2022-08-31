@@ -1,10 +1,10 @@
+use artisreit_convert::config::Config;
+use artisreit_convert::copy;
+use artisreit_convert::generator;
 use std::env;
 use std::error::Error;
 use std::path::Path;
 use std::process;
-use artisreit_convert::config::Config;
-use artisreit_convert::generator;
-use artisreit_convert::copy;
 /// 1. copy directory  
 /// https://docs.rs/fs_extra/1.2.0/fs_extra/dir/fn.copy.html
 /// 2. command line
@@ -24,7 +24,6 @@ fn main() {
 }
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
-
     println!(
         "Generate files by:
          From:\t[{}] 
@@ -36,11 +35,11 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let root_path = &config.to;
     let data_json_path = Path::new(&config.from).join(Path::new("data.json"));
     if data_json_path.is_file() {
-        if let Ok(data_json) = generator::cat(data_json_path.to_str().unwrap()){
+        if let Ok(data_json) = generator::cat(data_json_path.to_str().unwrap()) {
             generator::create_files_by_json(&data_json, ".", root_path);
-            copy::dir_mirror(&config.from,&config.to).expect("dir_mirror error")
+            copy::dir_mirror(&config.from, &config.to).expect("dir_mirror error")
         }
-    }else{
+    } else {
         //todo url get json;
     }
 

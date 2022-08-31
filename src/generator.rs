@@ -1,3 +1,4 @@
+use serde::ser::Error;
 use serde_json::{Map, Value};
 use std::fs;
 use std::fs::File;
@@ -72,13 +73,9 @@ fn json_to_yaml(jsonstr: &str) -> Option<String> {
 }
 
 fn json_to_toml(jsonstr: &str) -> Option<String> {
-    if let Ok(Value::Object(map)) = serde_json::from_str(jsonstr) {
-        if let Ok(toml) = toml::to_string(&map) {
-            return Some(toml);
-        }
-    }
-    eprint!("There are problem to parse the json string and convert to toml string");
-    return None;
+    let v: toml::Value = serde_json::from_str(&jsonstr).expect("json_to_toml error");
+    let toml_text: String = v.to_string();
+    return Some(toml_text);
 }
 
 fn yaml_to_md(yamlstr: &str) -> Option<String> {
@@ -89,14 +86,14 @@ fn yaml_to_md(yamlstr: &str) -> Option<String> {
             result.push_str(con);
             yaml_map.remove("content");
         }
-        result.insert_str(0, "+++\n");
+        result.insert_str(0, "---\n");
         if let Ok(yaml) = serde_yaml::to_string(&yaml_map) {
             result.insert_str(0, &yaml);
         }
     } else {
-        result.insert_str(0, "+++\n");
+        result.insert_str(0, "---\n");
     }
-    result.insert_str(0, "+++\n");
+    result.insert_str(0, "---\n");
     return Some(result);
 }
 
@@ -108,14 +105,14 @@ fn toml_to_md(yamlstr: &str) -> Option<String> {
             result.push_str(con);
             yaml_map.remove("content");
         }
-        result.insert_str(0, "+++\n");
+        result.insert_str(0, "---\n");
         if let Ok(yaml) = serde_yaml::to_string(&yaml_map) {
             result.insert_str(0, &yaml);
         }
     } else {
-        result.insert_str(0, "+++\n");
+        result.insert_str(0, "---\n");
     }
-    result.insert_str(0, "+++\n");
+    result.insert_str(0, "---\n");
     return Some(result);
 }
 
